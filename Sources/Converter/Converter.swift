@@ -3,7 +3,7 @@ import AVFoundation
 import VideoToolbox
 import Combine
 
-final class Exporter {
+final class Converter {
 
     var completion: ((Result<URL, Error>) -> Void)?
     var configuration: Configuration!
@@ -73,7 +73,11 @@ final class Exporter {
             fatalError("could not get contents of image from \(photoURL)")
         }
 
-        let outputURL = FileManager.documentsDirectory!.appendingPathComponent("test_exported_video.mp4", isDirectory: false)
+      guard let documentsDirectory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) else {
+        fatalError("could not get documents directory")
+      }
+      
+        let outputURL = documentsDirectory.appendingPathComponent("test_exported_video.mp4", isDirectory: false)
 
         if let _ = FileManager.default.contents(atPath: outputURL.path) {
           do {
@@ -123,7 +127,7 @@ final class Exporter {
 }
 
 
-extension Exporter {
+extension Converter {
     func videoSettings(with size: CGSize) -> [String: Any] {
         [
             AVVideoCodecKey: AVVideoCodecType.h264,
@@ -137,6 +141,7 @@ extension Exporter {
 
     }
 
+    // may not need this anymore
     static func timesForDuration(seconds: Int, frameRate: Int) -> [CMTime] {
         var times: [CMTime] = []
         for frameCount in 0..<(seconds * frameRate) {
@@ -144,12 +149,4 @@ extension Exporter {
         }
         return times
     }
-}
-
-extension FileManager {
-  static var documentsDirectory: URL? {
-    let documentsDirectory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-
-    return documentsDirectory
-  }
 }
